@@ -44,7 +44,7 @@ shinyUI <- dashboardPage(
   #setBackgroundColor(color = "#F5F5F5"),
   dashboardHeader(title = div(tags$img(src="Butterfly_icon.png", height = 50), "Butterfly Advanced"), titleWidth = 300),
   #dashboardHeader(title = "Butterfly plus"),
-    
+
   dashboardSidebar(width = 300,
     sidebarMenu(
       menuItem("Weather", tabName = "weather", icon = icon("sun"), startExpanded = TRUE,
@@ -86,11 +86,11 @@ shinyUI <- dashboardPage(
       includeCSS(path = "www/custom.css")
     ),
     
-
+    includeHTML("intro.html"),
     br(),
     bsCollapse(id = "collapse",
       bsCollapsePanel(title = "Activity description", style = "warning",
-                      includeHTML("intro.html")
+                      includeHTML("instruction.html")
                       )
      ),
     #plotOutput("plot") %>% withSpinner(type = 7),
