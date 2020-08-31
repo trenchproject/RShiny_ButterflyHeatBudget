@@ -1,5 +1,6 @@
 source("functions.R", local = TRUE)
 
+# Find the most recent day with tmax and tmin data.
 x <- 1
 t <- 0
 
@@ -25,35 +26,34 @@ zenith <- zenith_angle(doy = day_of_year(Sys.Date() - x), lat = 38.9, lon = -107
 
 
 
-
 shinyServer <- function(input, output, session) {
 
+  # Calculate hourly air temperatures based on tmax and tmin
   airTemp <- reactive({
     if(input$data == "recent") {
-
-    
       diurnal_temp_variation_sine(tmax$data$value / 10 , tmin$data$value / 10, c(0:23))
     } else {
       validate(need(input$tmax, ""),
-               need(input$tmin, ""))
+               need(input$tmin, "")
+      )
       diurnal_temp_variation_sine(input$tmax, input$tmin, c(0:23))
     }
   })
-
   
-   
+  # When input$data is recent, show tmin and tmax from the station, 
+  # otherwise provide numericInputs for users to manually enter.
   output$manual <- renderUI({
-    if(!input$data == "recent") {
-      list(
-        numericInput("tmax", "Tmax (°C)", value = 30),
-        numericInput("tmin", "Tmin (°C)", value = 10)
-      )
-    } else {
+    if(input$data == "recent") {
       list(
         strong(div("Data from", Sys.Date() - x), style = "color:black"),
         div(paste0("Tmax: ", tmax$data$value / 10, "°C"), style = "color:black"),
         div(paste0("Tmin: ", tmin$data$value / 10, "°C"), style = "color:black"),
         hr()
+      )
+    } else {
+      list(
+        numericInput("tmax", "Tmax (°C)", value = 30),
+        numericInput("tmin", "Tmin (°C)", value = 10)
       )
     }
   })
@@ -70,8 +70,8 @@ shinyServer <- function(input, output, session) {
     
   })
   
+  # Define body temperature
   bodyTemp <- reactive({
-    
     if (input$weather == "Clear") {
       dir <- 1012  # assuming total radiation is 1100 and 92% is direct
       dif <- 98
@@ -102,6 +102,7 @@ shinyServer <- function(input, output, session) {
                  r_g=0.3, 
                  shade = input$shade)
   })
+  
   
   output$plotly <- renderPlotly({
 
@@ -338,6 +339,22 @@ shinyServer <- function(input, output, session) {
            <br>k<sub>e</sub>: 1.3 mW cm<sup>-1</sup>K<sup>-1</sup>
            <br>A<sub>c</sub>:", round(pi * input$diam / 10, digits = 1), "cm<sup>2</sup> (Total surface area)"
       )
+    }
+  })
+  
+  observeEvent(input$showSidebar, {
+    shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+  })
+  
+  observeEvent(input$hideSidebar, {
+    shinyjs::addClass(selector = "body", class = "sidebar-collapse")
+  })
+  
+  observeEvent(input$sidebar, {
+    if (input$sidebar) {
+      shinyjs::removeClass(selector = "body", class = "sidebar-collapse")
+    } else {
+      shinyjs::addClass(selector = "body", class = "sidebar-collapse")
     }
   })
 }

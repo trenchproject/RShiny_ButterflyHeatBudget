@@ -16,6 +16,7 @@ library("rnoaa")
 library("magrittr")
 library("dashboardthemes")
 library("shinydashboard")
+library("shinyjs")
 # library("dplyr")
 # library("maps")
 # library("raster")
@@ -42,10 +43,11 @@ library("shinyBS")
 shinyUI <- dashboardPage(
   # theme = shinytheme("united"),
   #setBackgroundColor(color = "#F5F5F5"),
+  title = "Butterfly Heat Budget Model",
   dashboardHeader(title = div(tags$img(src="Butterfly_icon.png", height = 50), "Butterfly Advanced"), titleWidth = 300),
   #dashboardHeader(title = "Butterfly plus"),
 
-  dashboardSidebar(width = 300,
+  dashboardSidebar(width = 300, collapsed = TRUE,
     sidebarMenu(
       menuItem("Weather", tabName = "weather", icon = icon("sun"), startExpanded = TRUE,
         radioButtons("data", list(icon("thermometer-half"), "Temperature data"), choices = c("Most recent" = "recent", "Manually input"), inline = TRUE),
@@ -85,6 +87,7 @@ shinyUI <- dashboardPage(
     tags$head(
       includeCSS(path = "www/custom.css")
     ),
+    useShinyjs(),
     
     includeHTML("intro.html"),
     br(),
@@ -93,6 +96,9 @@ shinyUI <- dashboardPage(
                       includeHTML("instruction.html")
                       )
      ),
+    # actionButton("showSidebar", "Show sidebar", styleclass = "danger"),
+    # actionButton("hideSidebar", "Hide sidebar", styleclass = "info"),
+    awesomeCheckbox("sidebar", "Show sidebar", status = "danger"),
     #plotOutput("plot") %>% withSpinner(type = 7),
     br(),
     plotlyOutput("plotly"),
