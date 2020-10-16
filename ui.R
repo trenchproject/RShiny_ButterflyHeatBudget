@@ -44,7 +44,7 @@ shinyUI <- dashboardPage(
   # theme = shinytheme("united"),
   #setBackgroundColor(color = "#F5F5F5"),
   title = "Butterfly Heat Budget Model",
-  dashboardHeader(title = div(tags$img(src="Butterfly_icon.png", height = 50), "Butterfly Advanced"), titleWidth = 300),
+  dashboardHeader(title = div(tags$img(src="Butterfly_icon.png", height = 50), "Butterfly Heat Budget"), titleWidth = 300),
   #dashboardHeader(title = "Butterfly plus"),
 
   dashboardSidebar(width = 300, collapsed = TRUE,
