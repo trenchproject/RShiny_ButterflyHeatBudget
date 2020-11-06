@@ -1,6 +1,6 @@
 # RShiny_ButterflyHeatBudget
 
-ButterflyHeatBudget is an interactive shiny app that allows any user to visualize the details of heat budget model of montane butterflies. The butterflies' body temperature is calculated based on a function from [TrenchR](https://github.com/trenchproject/TrenchR)
+ButterflyHeatBudget is an interactive shiny app that allows any user to visualize the details of a heat budget model of montane butterflies. The butterflies' body temperatures are calculated based on a function from [TrenchR](https://github.com/trenchproject/TrenchR).
 
 
 ## Prerequisites for opening in Rstudio
