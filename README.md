@@ -25,7 +25,7 @@ Click on "Code" on the top right to copy the link to this repository.
 Click ```File```, ```New Project```, ```Version Control```, ```Git```  
 Paste the repository URL and click ```Create Project```.
 
-* Alternatively, go to [this link](https://huckley.shinyapps.io/ButterflyHeatBudget).
+* Alternatively, go to [this link](https://huckley.shinyapps.io/RShiny_ButterflyHeatBudget/).
 
 We have a google doc with questions to guide through the app for further understanding of the topic.
 
