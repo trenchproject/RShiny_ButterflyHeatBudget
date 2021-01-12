@@ -29,9 +29,9 @@ Paste the repository URL and click ```Create Project```.
 
 We have a google doc with questions to guide through the app for further understanding of the topic.
 
-## Contributing to PlasticityTradeoff
+## Contributing to ButterflyHeatBudget
 <!--- If your README is long or you have some specific process or steps you want contributors to follow, consider creating a separate CONTRIBUTING.md file--->
-To contribute to PlasticityTradeoff, follow these steps:
+To contribute to ButterflyHeatBudget, follow these steps:
 
 1. Fork this repository.
 2. Create a branch: `git checkout -b <branch_name>`.
