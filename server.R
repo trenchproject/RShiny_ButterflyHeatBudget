@@ -24,7 +24,9 @@ tmin <- ncdc(datasetid = 'GHCND',
 
 zenith <- zenith_angle(doy = day_of_year(Sys.Date() - x), lat = 38.9, lon = -107.0, hour = c(0:23))
 
-
+doy=day_of_year(Sys.Date() - x)
+t0= solar_noon(lon=-107, doy=doy)
+hour = c(0:23)
 
 shinyServer <- function(input, output, session) {
 
@@ -60,9 +62,9 @@ shinyServer <- function(input, output, session) {
   
   output$plot <- renderPlot({
 
-    colors <- c("Environmental" = "black", "Operative" = "blue")
+    colors <- c("T air" = "black", "T body" = "blue")
     
-    ggplot() + geom_line(aes(x = c(0:23), y = airTemp(), color = "Environmental"), size = 1.3) + geom_line(aes(x = c(0:23), y = bodyTemp(), color = "Operative"), size = 1.3) +
+    ggplot() + geom_line(aes(x = c(0:23), y = airTemp(), color = "T air"), size = 1.3) + geom_line(aes(x = c(0:23), y = bodyTemp(), color = "T body"), size = 1.3) +
       xlab("Day") + ylab("Temperature (°C)") + theme_bw() + ggtitle("C. eriphyle body temperatures") +
       scale_color_manual(values = colors) +
       theme(plot.title = element_text(size = 18), axis.text = element_text(size = 13), axis.title = element_text(size = 16), legend.text = element_text(size = 13), 
@@ -72,25 +74,30 @@ shinyServer <- function(input, output, session) {
   
   # Define body temperature
   bodyTemp <- reactive({
-    if (input$weather == "Clear") {
-      dir <- 1012  # assuming total radiation is 1100 and 92% is direct
-      dif <- 98
-    } else if (input$weather == "Partly sunny") {
-      dir <- 350
-      dif <- 350
-    } else {
-      dir <- 0
-      dif <- 300
-    }
     
-    if(input$shade) {
-      dir <- 0
-      dif <- 0
-    }
-
+    #set zs to plant height
+    Tas= mapply(air_temp_profile, airTemp(), T_s=airTemp()+5, u_r=input$wind, zr=2, z0=0.02, z=0.02)
+    
+    #estimate radiation
+   rad= mapply(direct_solar_radiation, hour, lat = 38.9, doy=doy, elev= 2700,t0=t0, method="Campbell 1977")
+    
+    
+   #partition radiation
+   if (input$weather == "Clear") {
+     diff= partition_solar_radiation(method="Erbs", kt=0.8, lat=38.9)
+   } else if (input$weather == "Partly sunny") {
+     diff= partition_solar_radiation(method="Erbs", kt=0.7, lat=38.9)
+   } else {
+     diff= partition_solar_radiation(method="Erbs", kt=0.5, lat=38.9)
+     shade = FALSE
+   }
+   
+   dir <- rad*(1-diff)
+   dif <- rad*(diff)
+    
     Tb <- mapply(Tb_butterfly, 
                  T_a = airTemp(),
-                 Tg = airTemp() + input$ground, 
+                 Tg = airTemp() + 5, 
                  Tg_sh = airTemp() - 5, 
                  u = input$wind, 
                  H_sdir = dir, 
@@ -100,7 +107,7 @@ shinyServer <- function(input, output, session) {
                  delta = input$fur, 
                  alpha=as.numeric(input$abs), 
                  r_g=0.3, 
-                 shade = input$shade)
+                 shade = FALSE)
   })
   
   
@@ -113,9 +120,9 @@ shinyServer <- function(input, output, session) {
       title <- "Butterfly temperature"
     }
     fig <- 
-      plot_ly(x = ~c(0:23), y = ~airTemp(), name = "Environmental", type = "scatter", mode = "lines") %>%
+      plot_ly(x = ~c(0:23), y = ~airTemp(), name = "T air", type = "scatter", mode = "lines") %>%
         # add_trace() %>%
-        add_trace(y = ~bodyTemp(), name = "Operative") %>%
+        add_trace(y = ~bodyTemp(), name = "T body") %>%
         layout(title = title,
                xaxis = list(title = "Hour"),
                yaxis = list(title = "Temperature (°C)")) %>% 
@@ -136,9 +143,6 @@ shinyServer <- function(input, output, session) {
     } else {
       dir <- 0
     }
-    if(input$shade) {
-      dir <- 0
-    }
     dir
   })
   
@@ -149,9 +153,6 @@ shinyServer <- function(input, output, session) {
       dif <- 350
     } else {
       dif <- 300
-    }
-    if(input$shade) {
-      dif <- 0
     }
     dif
   })
@@ -178,11 +179,9 @@ shinyServer <- function(input, output, session) {
     abs <- as.numeric(input$abs)
     solar <- ifelse(is.null(d), "", round(abs * (A / 2) * dir * cos(zenith[hour+1] * pi / 180) + 
                                             abs * (A / 2) * dif + abs * 0.3 * (A / 2) * (dir + dif), digits = 1))
-    if(!is.null(d) && input$shade == TRUE) {
-      solar <- solar / 2
-    }
+  
     thermal <- ifelse(is.null(d), "", round(0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - Tsky^4) + 
-                                              0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - (atemp + input$ground)^4), digits = 1))
+                                              0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - (atemp + 5)^4), digits = 1))
     
     R_e = input$wind * D / (15.68 * 10^-2)
     N_u = 0.6 * R_e^0.5
@@ -200,7 +199,7 @@ shinyServer <- function(input, output, session) {
   output$summary <- renderUI({
     d <- event_data("plotly_click")
     hour <- d[,"x"]
-    ground <- ifelse(is.null(d), paste("Air temp +", input$ground), round(airTemp()[hour+1], digits = 1) + input$ground)
+    ground <- ifelse(is.null(d), paste("Air temp +", 5), round(airTemp()[hour+1], digits = 1) + 5)
     
     if(input$weather == "Clear") {
       weather <- "Clear (Direct)"
@@ -208,7 +207,6 @@ shinyServer <- function(input, output, session) {
     weeather <- 
     HTML("Wind speed (u): ", input$wind,
          "m/s</br>Weather: ", input$weather,
-         "</br>Shade: ", input$shade,
          "</br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Direct solar radiation: ", direct(),
          "W/m<sup>2</sup></br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Diffuse solar radiation: ", diffuse(),
          "W/m<sup>2</sup></br>Wing absorptivity (&alpha;): ", input$abs,
@@ -258,9 +256,9 @@ shinyServer <- function(input, output, session) {
          "<br> 0.5A<sub>t</sub> &times; &epsilon;&sigma;(T<sub>b</sub><sup>4</sup> - T<sub>sky</sub><sup>4</sup>) + 
                                               0.5A<sub>t</sub> &times; &epsilon;&sigma;(T<sub>b</sub><sup>4</sup> - T<sub>g</sub><sup>4</sup>)",
          "<br> = 0.5 &times; (&pi; &times;", input$diam / 10, ") &times; 1 &times; (5.67 &times; 10<sup>-9</sup>) &times; ((", body, " + 273.15)<sup>4</sup> - ((1.22 &times; ", air, " - 20.4) + 273.15)<sup>4</sup>) + 
-         0.5 &times; (&pi; &times;", input$diam / 10, ") &times; 1 &times; (5.67 &times; 10<sup>-9</sup>) &times; ((", body, " + 273.15)<sup>4</sup> - (", air + input$ground, "+ 273.15)<sup>4</sup>)
+         0.5 &times; (&pi; &times;", input$diam / 10, ") &times; 1 &times; (5.67 &times; 10<sup>-9</sup>) &times; ((", body, " + 273.15)<sup>4</sup> - (", air + 5, "+ 273.15)<sup>4</sup>)
          <br> =", round(0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - Tsky^4) + 
-                          0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - (atemp + input$ground)^4), digits = 1),
+                          0.5 * A * 1 * (5.67 * 10^-9) * (btemp^4 - (atemp + 5)^4), digits = 1),
          "<br><br><b>Convective</b>",
          "<br> (1 / (0.6 &times; (uD / &nu;)<sup>0.5</sup>) &times; k<sub>a</sub> / D + (r<sub>i</sub> + &delta;) &times; ln((r<sub>i</sub> + &delta;) / r<sub>i</sub>) / k<sub>e</sub>)<sup>-1</sup> &times; A<sub>c</sub> (T<sub>b</sub> - T<sub>a</sub>)
          <br> = (1 / (0.6 &times; (", input$wind * 100, "&times; ", D, "/ 15.68 &times; 10<sup>-2</sup>)<sup>0.5</sup>) &times; 0.25 / ", D,

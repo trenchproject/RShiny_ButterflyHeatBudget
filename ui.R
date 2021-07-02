@@ -41,12 +41,16 @@ library("shinyBS")
 
 
 shinyUI <- dashboardPage(
-  # theme = shinytheme("united"),
-  #setBackgroundColor(color = "#F5F5F5"),
   title = "Butterfly Heat Budget Model",
-  dashboardHeader(title = div(tags$img(src="Butterfly_icon.png", height = 50), "Butterfly Heat Budget"), titleWidth = 300),
-  #dashboardHeader(title = "Butterfly plus"),
-
+  dashboardHeader(title = div(tags$img(src="TRENCH_Logo_Circle-TrenchEd.png", height = 50), "Animal Energy Budgets",style = "font-size: 40px"), titleWidth = 800, 
+      # Set height of dashboardHeader
+      tags$li(class = "dropdown",
+              tags$style(".main-header {max-height: 50px}"),
+              tags$style(".main-header .logo {height: 50px;}"),
+              tags$style(".sidebar-toggle {height: 50px; padding-top: 1px !important;}"),
+              tags$style(".navbar {min-height:50px !important}")
+      )),
+          
   dashboardSidebar(width = 300, collapsed = TRUE,
     sidebarMenu(
       menuItem("Weather", tabName = "weather", icon = icon("sun"), startExpanded = TRUE,
@@ -63,21 +67,14 @@ shinyUI <- dashboardPage(
         #sliderInput("zenith", "Zenith angle (°)", min = 0, max = 90, step = 5, value = 30)
       ),
       menuItem("Morphology", tabName = "morph", icon = icon("bug"),
-        selectInput("abs", list(icon("tint"), "Wing absorptivity"), choices = seq(0.4, 0.7, 0.05)),
+        selectInput("abs", list(icon("tint"), "Wing absorptivity (proportion)"), choices = seq(0.4, 0.7, 0.05)),
         numericInput("diam", list(icon("ruler-vertical"), "Thoracic diameter (mm)"), value = 3.6),
         numericInput("fur", list(icon("ruler-horizontal"), "Fur thickness (mm)"), value = 1.46)
-      ),
-
-      menuItem("Terrain properties", tabName = "terrain", icon = icon("tree"),
-        numericInput("ground", list(icon("thermometer-full"), "Ground Temperature (°C above air temperature)"), value = 5),
-        selectInput("shade", list(icon("umbrella-beach"),"Shade"), choices = c("Exposed" = FALSE, "Covered" = TRUE))
       )
     ),
-    
+
     bsTooltip("weather", "Clear / Partly sunny / Cloudy"),
-    bsTooltip("abs", "Butterfly absorptivity to solar radiation. The greater the value, the darker the wing coloration."),
-    bsTooltip("ground", "How much warmer is the ground temperature compared to air temperature?"),
-    bsTooltip("shade", placement = "top", "Are the butterflies exposed to the sun or in the shade?")
+    bsTooltip("abs", "Butterfly absorptivity to solar radiation. The greater the value, the darker the wing coloration.")
   ),
   dashboardBody(
     shinyDashboardThemes(

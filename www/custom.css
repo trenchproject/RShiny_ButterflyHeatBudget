@@ -22,3 +22,29 @@ body {
 .box {
   font-family: "Calibri";
 }
+
+/* logo */
+  .skin-blue .main-header .logo {
+    background-color: #18778D;
+  }
+
+/* logo when hovered */
+  .skin-blue .main-header .logo:hover {
+    background-color: #18778D;
+  }
+
+/* navbar (rest of the header) */
+  .skin-blue .main-header .navbar {
+    background-color: #18778D;
+  }        
+  
+/* toggle button  */                    
+  .skin-blue .main-header .navbar .sidebar-toggle {
+    background-color: #18778D;
+  }  
+  
+/* toggle button when hovered  */                    
+  .skin-blue .main-header .navbar .sidebar-toggle:hover{
+    background-color: #18778D;
+  }
+
