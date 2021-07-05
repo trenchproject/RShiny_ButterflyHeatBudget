@@ -42,7 +42,7 @@ library("shinyBS")
 
 shinyUI <- dashboardPage(
   title = "Butterfly Heat Budget Model",
-  dashboardHeader(title = div(tags$img(src="TRENCH_Logo_Circle-TrenchEd.png", height = 50), "Animal Energy Budgets",style = "font-size: 40px"), titleWidth = 800, 
+  dashboardHeader(title = div(tags$img(src="TRENCH_Logo_Circle-TrenchEd.png", height = 50), "Animal Heat Budgets",style = "font-size: 32px"), titleWidth = 800, 
       # Set height of dashboardHeader
       tags$li(class = "dropdown",
               tags$style(".main-header {max-height: 50px}"),

@@ -81,7 +81,6 @@ shinyServer <- function(input, output, session) {
     #estimate radiation
    rad= mapply(direct_solar_radiation, hour, lat = 38.9, doy=doy, elev= 2700,t0=t0, method="Campbell 1977")
     
-    
    #partition radiation
    if (input$weather == "Clear") {
      diff= partition_solar_radiation(method="Erbs", kt=0.8, lat=38.9)
@@ -98,7 +97,7 @@ shinyServer <- function(input, output, session) {
     Tb <- mapply(Tb_butterfly, 
                  T_a = airTemp(),
                  Tg = airTemp() + 5, 
-                 Tg_sh = airTemp() - 5, 
+                 Tg_sh = airTemp(), 
                  u = input$wind, 
                  H_sdir = dir, 
                  H_sdif = dif, 
@@ -136,25 +135,38 @@ shinyServer <- function(input, output, session) {
   })
   
   direct <- reactive({
+    #estimate radiation
+    rad= mapply(direct_solar_radiation, hour, lat = 38.9, doy=doy, elev= 2700,t0=t0, method="Campbell 1977")
+    
+    #partition radiation
     if (input$weather == "Clear") {
-      dir <- 1012  # assuming total radiation is 1100 and 92% is direct
+      diff= partition_solar_radiation(method="Erbs", kt=0.8, lat=38.9)
     } else if (input$weather == "Partly sunny") {
-      dir <- 350
+      diff= partition_solar_radiation(method="Erbs", kt=0.7, lat=38.9)
     } else {
-      dir <- 0
+      diff= partition_solar_radiation(method="Erbs", kt=0.5, lat=38.9)
+      shade = FALSE
     }
-    dir
+    
+    dir <- rad*(1-diff)
+    
   })
   
   diffuse <- reactive({
+    #estimate radiation
+    rad= mapply(direct_solar_radiation, hour, lat = 38.9, doy=doy, elev= 2700,t0=t0, method="Campbell 1977")
+    
+    #partition radiation
     if (input$weather == "Clear") {
-      dif <- 98
+      diff= partition_solar_radiation(method="Erbs", kt=0.8, lat=38.9)
     } else if (input$weather == "Partly sunny") {
-      dif <- 350
+      diff= partition_solar_radiation(method="Erbs", kt=0.7, lat=38.9)
     } else {
-      dif <- 300
+      diff= partition_solar_radiation(method="Erbs", kt=0.5, lat=38.9)
+      shade = FALSE
     }
-    dif
+    
+    dif <- rad*(diff)
   })
   
   output$heat <- renderUI({
@@ -167,8 +179,9 @@ shinyServer <- function(input, output, session) {
     D <- input$diam / 10
     fur <- input$fur / 10
     A <- pi * D * 2  # surface area
-    dir <- direct()
-    dif <- diffuse()
+    
+    dir <- ifelse(is.null(d), "", round(direct()[hour+1], digits = 1))
+    dif <- ifelse(is.null(d), "", round(diffuse()[hour+1], digits = 1))
     
     if(!is.null(d)) {
       Tsky = (1.22 * air - 20.4) + 273.15
@@ -201,14 +214,17 @@ shinyServer <- function(input, output, session) {
     hour <- d[,"x"]
     ground <- ifelse(is.null(d), paste("Air temp +", 5), round(airTemp()[hour+1], digits = 1) + 5)
     
+    dir <- ifelse(is.null(d), "", round(direct()[hour+1], digits = 1))
+    dif <- ifelse(is.null(d), "", round(diffuse()[hour+1], digits = 1))
+    
     if(input$weather == "Clear") {
       weather <- "Clear (Direct)"
     }
     weeather <- 
     HTML("Wind speed (u): ", input$wind,
          "m/s</br>Weather: ", input$weather,
-         "</br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Direct solar radiation: ", direct(),
-         "W/m<sup>2</sup></br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Diffuse solar radiation: ", diffuse(),
+         "</br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Direct solar radiation: ", dir,
+         "W/m<sup>2</sup></br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#8594;Diffuse solar radiation: ", dif,
          "W/m<sup>2</sup></br>Wing absorptivity (&alpha;): ", input$abs,
          "</br>Thoracic diameter (D): ", input$diam,
          "mm </br>Fur thickness (&delta;): ", input$fur,
@@ -225,8 +241,9 @@ shinyServer <- function(input, output, session) {
     clock <- ifelse(is.null(d), "None", paste0(hour, ":00"))
     air <- ifelse(is.null(d), "", round(airTemp()[hour+1], digits = 1))
     body <- ifelse(is.null(d), "", round(bodyTemp()[hour+1], digits = 1))
-    dir <- direct()
-    dif <- diffuse()
+    
+    dir <- ifelse(is.null(d), "", round(direct()[hour+1], digits = 1))
+    dif <- ifelse(is.null(d), "", round(diffuse()[hour+1], digits = 1))
     
     D <- input$diam / 10
     fur <- input$fur / 10
@@ -298,8 +315,8 @@ shinyServer <- function(input, output, session) {
       clock <- ifelse(is.null(d), "None", paste0(hour, ":00"))
       air <- ifelse(is.null(d), "", round(airTemp()[hour+1], digits = 1))
       body <- ifelse(is.null(d), "", round(bodyTemp()[hour+1], digits = 1))
-      dir <- direct()
-      dif <- diffuse()
+      dir <- ifelse(is.null(d), "", round(direct()[hour+1], digits = 1))
+      dif <- ifelse(is.null(d), "", round(diffuse()[hour+1], digits = 1))
       
       D <- input$diam / 10
       fur <- input$fur / 10
