@@ -68,8 +68,8 @@ shinyUI <- dashboardPage(
       ),
       menuItem("Morphology", tabName = "morph", icon = icon("bug"),
         selectInput("abs", list(icon("tint"), "Wing absorptivity (proportion)"), choices = seq(0.4, 0.7, 0.05)),
-        numericInput("diam", list(icon("ruler-vertical"), "Thoracic diameter (mm)"), value = 3.6),
-        numericInput("fur", list(icon("ruler-horizontal"), "Fur thickness (mm)"), value = 1.46)
+        numericInput("diam", list(icon("ruler-vertical"), "Thoracic diameter (mm)"), value = 3.6, min=0.5, step=0.5),
+        numericInput("fur", list(icon("ruler-horizontal"), "Fur thickness (mm)"), value = 1.46, min=0, step=0.5)
       )
     ),
 
