@@ -2,7 +2,7 @@
   font-family: "Calibri";
   font-weight: bold;
   font-size: 23px;
-  position: fixed;
+  position: relative;
 }
 
 .main-sidebar {
@@ -26,6 +26,7 @@ body {
 /* logo */
   .skin-blue .main-header .logo {
     background-color: #18778D;
+
   }
 
 /* logo when hovered */
